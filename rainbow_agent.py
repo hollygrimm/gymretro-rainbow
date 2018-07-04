@@ -64,7 +64,7 @@ def main():
                 train_interval=1,
                 target_interval=8192,
                 batch_size=32,
-                min_buffer_size=32,
+                min_buffer_size=20000,
                 handle_ep=_handle_ep)
 
 if __name__ == '__main__':
