@@ -76,7 +76,7 @@ def main():
             summary_writer.add_summary(summary_reward, global_step=total_steps)
 
             print('save model')
-            saver.save(sess=sess, save_path=checkpoint_dir, global_step=total_steps)
+            saver.save(sess=sess, save_path=checkpoint_dir + '/model', global_step=total_steps)
 
             if len(reward_hist) == REWARD_HISTORY:
                 print('%d steps: mean=%f' % (total_steps, sum(reward_hist) / len(reward_hist)))
