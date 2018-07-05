@@ -8,6 +8,7 @@ implementation.
 import tensorflow as tf
 import os
 import time
+import argparse
 
 from anyrl.algos import DQN
 from anyrl.envs import BatchedGymEnv
@@ -21,19 +22,38 @@ from sonic_util import AllowBacktracking, make_env
 
 REWARD_HISTORY = 10
 
-# TODO: Add DownsampleEnv, GrayscaleEnv
-
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--restore', '-restore', action='store_true')
+    args = parser.parse_args()
+
     """Run DQN until the environment throws an exception."""
     env = AllowBacktracking(make_env(stack=False, scale_rew=False))
     env = BatchedFrameStack(BatchedGymEnv([[env]]), num_images=4, concat=False)
 
+    checkpoint_dir = os.path.join(os.getcwd(), 'results')
     results_dir = os.path.join(os.getcwd(), 'results', time.strftime("%d-%m-%Y_%H-%M-%S"))
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
     summary_writer = tf.summary.FileWriter(results_dir)
+
+    save_iters = 1024
+    saver = tf.train.Saver()
+
+    # TODO
+    # env = wrappers.Monitor(env, results_dir, force=True)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True # pylint: disable=E1101
     with tf.Session(config=config) as sess:
+        if args.restore:
+            latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+            if latest_checkpoint:
+                print("Loading model checkpoint {} ...\n".format(latest_checkpoint))
+                saver.restore(sess, latest_checkpoint)
+            else:
+                print("Checkpoint not found")
+
         dqn = DQN(*rainbow_models(sess,
                 env.action_space.n,
                 gym_space_vectorizer(env.observation_space),
@@ -56,6 +76,9 @@ def main():
                 summary_meanreward.value.add(tag='global/mean_reward', simple_value=sum(reward_hist) / len(reward_hist))
                 summary_writer.add_summary(summary_meanreward, global_step=total_steps)
                 reward_hist.clear()
+            if total_steps % save_iters == 0:
+                print('save model')
+                saver.save(sess=sess, save_path=checkpoint_dir, global_step=total_steps)
 
         dqn.train(num_steps=2000000, # Make sure an exception arrives before we stop.
                 player=player,
