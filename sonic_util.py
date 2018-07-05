@@ -9,7 +9,7 @@ import retro
 from baselines.common.atari_wrappers import WarpFrame, FrameStack
 import gym_remote.client as grc
 
-def make_env(stack=True, scale_rew=True):
+def make_env(stack=True, scale_rew=True, record=False):
     """
     Create an environment with some standard wrappers.
     """
@@ -17,7 +17,7 @@ def make_env(stack=True, scale_rew=True):
 
     # train locally here we can add a new method to automatically load different game levels 
     # here we can only train a single game level. 
-    env = retro.make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1')
+    env = retro.make(game='SonicTheHedgehog-Genesis', state='LabyrinthZone.Act1', record=record)
 
     env = SonicDiscretizer(env)
     if scale_rew:

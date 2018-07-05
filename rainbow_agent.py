@@ -24,11 +24,12 @@ REWARD_HISTORY = 10
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--restore', '-restore', action='store_true')
+    parser.add_argument('--restore', '-restore', action='store_true', help='restore from checkpoint file')
+    parser.add_argument('--record', '-record', action='store_true', help='record bk2 movies')
     args = parser.parse_args()
 
     """Run DQN until the environment throws an exception."""
-    env = AllowBacktracking(make_env(stack=False, scale_rew=False))
+    env = AllowBacktracking(make_env(stack=False, scale_rew=False, record=args.record))
     env = BatchedFrameStack(BatchedGymEnv([[env]]), num_images=4, concat=False)
 
     checkpoint_dir = os.path.join(os.getcwd(), 'results')
