@@ -37,28 +37,28 @@ def main():
         os.makedirs(results_dir)
     summary_writer = tf.summary.FileWriter(results_dir)
 
-    save_iters = 1024
-    saver = tf.train.Saver()
-
     # TODO
     # env = wrappers.Monitor(env, results_dir, force=True)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True # pylint: disable=E1101
     with tf.Session(config=config) as sess:
+        dqn = DQN(*rainbow_models(sess,
+                env.action_space.n,
+                gym_space_vectorizer(env.observation_space),
+                min_val=-200,
+                max_val=200))
+
+        save_iters = 1024
+        saver = tf.train.Saver()
         if args.restore:
             latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
             if latest_checkpoint:
                 print("Loading model checkpoint {} ...\n".format(latest_checkpoint))
                 saver.restore(sess, latest_checkpoint)
             else:
-                print("Checkpoint not found")
+                print("Checkpoint not found")        
 
-        dqn = DQN(*rainbow_models(sess,
-                env.action_space.n,
-                gym_space_vectorizer(env.observation_space),
-                min_val=-200,
-                max_val=200))
         player = NStepPlayer(BatchedPlayer(env, dqn.online_net), 3)
         optimize = dqn.optimize(learning_rate=1e-4)
         sess.run(tf.global_variables_initializer())
