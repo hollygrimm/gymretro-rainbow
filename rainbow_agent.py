@@ -80,7 +80,7 @@ def main():
                 print('save model')
                 saver.save(sess=sess, save_path=checkpoint_dir, global_step=total_steps)
 
-        dqn.train(num_steps=2000000, # Make sure an exception arrives before we stop.
+        dqn.train(num_steps=7000000, # Make sure an exception arrives before we stop.
                 player=player,
                 replay_buffer=PrioritizedReplayBuffer(500000, 0.5, 0.4, epsilon=0.1),
                 optimize_op=optimize,
