@@ -49,7 +49,6 @@ def main():
                 min_val=-200,
                 max_val=200))
 
-        save_iters = 1024
         saver = tf.train.Saver()
         if args.restore:
             latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
@@ -66,19 +65,25 @@ def main():
         reward_hist = []
         total_steps = 0
 
+        # runs with every completed episode
         def _handle_ep(steps, rew):
             nonlocal total_steps
             total_steps += steps
             reward_hist.append(rew)
+            
+            summary_reward = tf.Summary()
+            summary_reward.value.add(tag='global/reward', simple_value=rew)
+            summary_writer.add_summary(summary_reward, global_step=total_steps)
+
+            print('save model')
+            saver.save(sess=sess, save_path=checkpoint_dir, global_step=total_steps)
+
             if len(reward_hist) == REWARD_HISTORY:
                 print('%d steps: mean=%f' % (total_steps, sum(reward_hist) / len(reward_hist)))
                 summary_meanreward = tf.Summary()
                 summary_meanreward.value.add(tag='global/mean_reward', simple_value=sum(reward_hist) / len(reward_hist))
                 summary_writer.add_summary(summary_meanreward, global_step=total_steps)
                 reward_hist.clear()
-            if total_steps % save_iters == 0:
-                print('save model')
-                saver.save(sess=sess, save_path=checkpoint_dir, global_step=total_steps)
 
         dqn.train(num_steps=7000000, # Make sure an exception arrives before we stop.
                 player=player,
